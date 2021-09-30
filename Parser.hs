@@ -38,8 +38,17 @@ notEmpty (Parser p) = Parser $ \input -> do
     (input', x:xs) <- p input
     Just (input', x:xs)
 
+surroundedBy :: Parser a -> Parser b -> Parser a
+surroundedBy inner out = out *> inner <* out
+
+separatedBy :: Parser a -> Parser b -> Parser [a]
+separatedBy p sep = ((:) <$> p <*> many (sep *> p)) <|> pure [] 
+
 char :: Char -> Parser Char
 char c = check (== c)
+
+spaces :: Parser String
+spaces = many (char ' ' <|> char '\t' <|> char '\n')
 
 digit :: Parser Int 
 digit = digitToInt <$> check isDigit
@@ -49,4 +58,8 @@ string "" = pure ""
 string (c:cs) = (:) <$> char c <*> string cs
 
 literalString :: Parser String
-literalString = char '"' *> spanCheck (/= '"') <* char '"'
+literalString = spanCheck (/= '"') `surroundedBy` char '"'
+
+list parser lbracket rbracker sep = lbracket *> elements <* rbracker
+    where
+        elements = parser `surroundedBy` spaces `separatedBy` sep
