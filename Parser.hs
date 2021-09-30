@@ -20,6 +20,11 @@ instance Alternative Parser where
     empty = Parser $ const empty
     p1 <|> p2 = Parser $ \input -> runParser p1 input <|> runParser p2 input
 
+instance Monad Parser where
+    parser >>= f = Parser $ \input -> do
+        (input', x) <- runParser parser input
+        runParser (f x) input'
+
 check :: (Char -> Bool) -> Parser Char
 check predicate = Parser $ \case
     (x:xs) | predicate x -> Just (xs, x)
