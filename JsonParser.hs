@@ -11,10 +11,11 @@ data JValue
     | JBool Bool
     | JInt Int
     | JString String
+    | JArray [JValue]
     deriving (Show)
 
 jvalue :: Parser JValue
-jvalue = jnull <|> jbool <|> jint <|> jstr
+jvalue = jnull <|> jbool <|> jint <|> jstr <|> jarray
 
 jnull :: Parser JValue
 jnull = string "null" $> JNull
@@ -27,3 +28,6 @@ jint = JInt . read <$> notEmpty (spanCheck isDigit)
 
 jstr :: Parser JValue
 jstr = JString <$> literalString
+
+jarray :: Parser JValue
+jarray = JArray <$> list jvalue (char '[') (char ']') (char ',')
